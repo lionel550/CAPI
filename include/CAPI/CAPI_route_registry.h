@@ -1,33 +1,24 @@
-#ifndef CAPI_REGISTRY_ROUTE
-#define CAPI_REGISTRY_ROUTE
+#ifndef CAPI_REGISTRY_ROUTE_
+#define CAPI_REGISTRY_ROUTE_
 
-typedef enum {
-    GET,
-    POST,
-    PUT,
-    // TODO: Support more HTTP methods
-} CAPI_HTTP_METHOD;
+#include <stdlib.h>
+#include "CAPI/CAPI_types.h"
 
-typedef struct {
-    CAPI_HTTP_METHOD method;
-} CAPI_Request;
+int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call);
 
-typedef struct {
-    char *reponse;
-} CAPI_Response;
+CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route);
 
-typedef void (*CAPI_API_CALL)(CAPI_Request*, CAPI_Response*);
+void CAPI_FreeRegister();
 
-void CAPI_RegisterEndpoint(CAPI_HTTP_METHOD method, char *route, CAPI_API_CALL call);
+#define CONCAT_HIDDEN(a, b, c, d) a ## _ ## b ## _ ## c ## _ ## d
+#define CONCAT(a, b, c, d) CONCAT_HIDDEN(a, b, c, d)
 
-CAPI_API_CALL CAPI_GetApiCallFor(CAPI_HTTP_METHOD method, char *route);
-
-#define CONCAT_HIDDEN(a, b) a ## b
-#define CONCAT(a, b) CONCAT_HIDDEN(a, b)
-
-#define REGISTER_ENDPOINT(method, route, api_call) \
-    void __attribute__((constructor)) CONCAT(register_endpoint_, __LINE__)() { \
-        CAPI_RegisterEndpoint(method, route, api_call); \
+#define REGISTER_ENDPOINT(http_method, route, api_call) \
+    void __attribute__((constructor)) CONCAT(register_endpoint, http_method, api_call, __COUNTER__)() { \
+        if (CAPI_RegisterEndpoint(http_method, route, api_call) < 0) { \
+            CAPI_FreeRegister(); \
+            exit(EXIT_FAILURE); \
+        } \
     }
 
-#endif // CAPI_REGISTRY_ROUTE
+#endif // CAPI_REGISTRY_ROUTE_
