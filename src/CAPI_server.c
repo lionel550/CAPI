@@ -10,18 +10,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <poll.h>
-#include <sys/wait.h>
-#include <signal.h>
+#include "CAPI_internal.h"
 
 // TODO: Implement dynamic array for request queue
-// TODO: <Ctrl + c> to stop the server
 #define DEFAULT_BINDING_ADRESS  INADDR_LOOPBACK
 #define DEAULT_BINDING_PORT     8080
 #define REQUEST_QUEUE_SIZE      15
-
-void sigchld_handler(int s) {
-    while(waitpid(-1, NULL, WNOHANG) > 0);
-}
 
 static int CAPI_CreateSocket()
 {
@@ -81,7 +75,7 @@ static int CAPI_AcceptLoop(int server_sockfd)
         .revents = 0
     };
 
-    for (;;)
+    while (CAPI_ShouldKeepRunning())
     {
         int ready = poll(&pfd, 1, -1);
 
@@ -136,7 +130,7 @@ static int CAPI_AcceptLoop(int server_sockfd)
         }
     }
 
-    return -1;
+    return 0;
 }
 
 void CAPI_RunServer()
@@ -148,18 +142,13 @@ void CAPI_RunServer()
         exit(EXIT_FAILURE);
     }
 
-    if (CAPI_BindSocket(server_sockfd, DEFAULT_BINDING_ADRESS, DEAULT_BINDING_PORT) == -1)
+    if (CAPI_BindSocket(server_sockfd, DEFAULT_BINDING_ADRESS, DEAULT_BINDING_PORT) == -1 
+            || CAPI_AcceptLoop(server_sockfd) == -1)
     {
         close(server_sockfd);
         exit(EXIT_FAILURE);
     }
 
-    struct sigaction sa = {.sa_handler = sigchld_handler, .sa_flags = SA_RESTART};
-    sigaction(SIGCHLD, &sa, NULL);
-
-    if (CAPI_AcceptLoop(server_sockfd) == -1)
-    {
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
+    close(server_sockfd);
+    exit(EXIT_SUCCESS);
 }

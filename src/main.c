@@ -16,7 +16,6 @@ int main()
     }
 
     api_call(NULL, NULL);
-    CAPI_FreeRegister();    
-    // CAPI_RunServer();
+    CAPI_RunServer();
     return 0;
 }

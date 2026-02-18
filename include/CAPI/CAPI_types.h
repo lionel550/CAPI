@@ -1,5 +1,5 @@
-#ifndef CAPI_TYPES_
-#define CAPI_TYPES_
+#ifndef CAPI_TYPES_H_
+#define CAPI_TYPES_H_
 
 // TODO: Complete the definition of CAPI_HttpMethod, CAPI_HttpRequest and CAPI_HttpResponse
 
@@ -27,4 +27,4 @@ typedef struct {
     CAPI_ApiCall api_call;
 } CAPI_Endpoint;
 
-#endif // CAPI_TYPES_
+#endif // CAPI_TYPES_H_

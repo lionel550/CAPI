@@ -62,7 +62,7 @@ static int CAPI_AddEndpoint(CAPI_Endpoint endpoint)
     return 0;
 }
 
-void CAPI_FreeRegister()
+void CAPI_FreeEndpointRegister()
 {
     for (int i = 0; i < endpoint_register.size; i++)
         free(endpoint_register.endpoints[i].route);
@@ -71,7 +71,7 @@ void CAPI_FreeRegister()
     
     endpoint_register.endpoints = NULL;
     endpoint_register.capacity = 0;
-    endpoint_register.size = -1;
+    endpoint_register.size = 0;
 }
 
 int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call)
