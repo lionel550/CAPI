@@ -1,6 +1,7 @@
 #ifndef CAPI_TYPES_H_
 #define CAPI_TYPES_H_
 
+#include <stdbool.h>
 // TODO: Complete the definition of CAPI_HttpMethod, CAPI_HttpRequest and CAPI_HttpResponse
 
 typedef enum {
@@ -10,6 +11,8 @@ typedef enum {
     PATCH,
     DELETE,
 } CAPI_HttpMethod;
+
+bool CAPI_IsValidHttpMethod(CAPI_HttpMethod http_method);
 
 typedef struct {
     CAPI_HttpMethod method;

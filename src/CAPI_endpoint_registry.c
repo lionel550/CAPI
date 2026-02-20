@@ -14,6 +14,11 @@ typedef struct {
 static CAPI_EndpointRegister endpoint_register = {.endpoints = NULL, .capacity = 0, .size = 0};
 
 CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route) {
+    if (!CAPI_IsValidHttpMethod(http_method) || route == NULL)
+    {
+        return NULL;
+    }
+
     for (int i = 0; i < endpoint_register.size; i++) {
         if (endpoint_register.endpoints[i].http_method == http_method 
                 && strcmp(endpoint_register.endpoints[i].route, route) == 0)
@@ -76,6 +81,11 @@ void CAPI_FreeEndpointRegister()
 
 int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call)
 {
+    if (!CAPI_IsValidHttpMethod(http_method) || route == NULL || api_call == NULL)
+    {
+        return -1;
+    }
+
     CAPI_Endpoint endpoint = {http_method, route, api_call};
 
     if (CAPI_AddEndpoint(endpoint) < 0)
