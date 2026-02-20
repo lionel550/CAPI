@@ -10,11 +10,11 @@ CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route);
 
 void CAPI_FreeEndpointRegister();
 
-#define CONCAT_HIDDEN(a, b, c, d) a ## _ ## b ## _ ## c ## _ ## d
-#define CONCAT(a, b, c, d) CONCAT_HIDDEN(a, b, c, d)
+#define CAPI_CONCAT_HIDDEN(a, b) a ## _ ## b
+#define CAPI_CONCAT(a, b) CAPI_CONCAT_HIDDEN(a, b)
 
-#define REGISTER_ENDPOINT(http_method, route, api_call) \
-    void __attribute__((constructor(102))) CONCAT(register_endpoint, http_method, api_call, __COUNTER__)() { \
+#define CAPI_REGISTER_ENDPOINT(http_method, route, api_call) \
+    void __attribute__((constructor(102))) CAPI_CONCAT(register_endpoint, __COUNTER__)() { \
         if (CAPI_RegisterEndpoint(http_method, route, api_call) == -1) { \
             exit(EXIT_FAILURE); \
         } \

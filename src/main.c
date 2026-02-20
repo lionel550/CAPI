@@ -4,7 +4,7 @@
 void hello(CAPI_HttpRequest *request, CAPI_HttpResponse *response) {
     printf("Hello from hello\n");
 }
-REGISTER_ENDPOINT(GET, "/hello", hello)
+CAPI_REGISTER_ENDPOINT(GET, "/hello", hello)
 
 int main()
 {
