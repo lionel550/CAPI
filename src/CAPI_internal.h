@@ -5,4 +5,6 @@ int CAPI_RegisterSignalActions();
 
 int CAPI_ShouldKeepRunning();
 
+void CAPI_FreeEndpointRegister();
+
 #endif // CAPI_INTERNAL_H_

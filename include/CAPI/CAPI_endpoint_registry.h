@@ -8,8 +8,6 @@ int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall
 
 CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route);
 
-void CAPI_FreeEndpointRegister();
-
 #define CAPI_CONCAT_HIDDEN(a, b) a ## _ ## b
 #define CAPI_CONCAT(a, b) CAPI_CONCAT_HIDDEN(a, b)
 

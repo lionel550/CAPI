@@ -1,5 +1,4 @@
 #include "CAPI_internal.h"
-#include "CAPI/CAPI_endpoint_registry.h"
 #include <stdlib.h>
 
 void __attribute__((constructor(101))) CAPI_Init()
