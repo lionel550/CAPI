@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "CAPI/CAPI_types.h"
+#include "CAPI_internal.h"
 
 // TODO: Replace this structure by a tree to speed up endpoint research
 
@@ -13,11 +14,10 @@ typedef struct {
 
 static CAPI_EndpointRegister endpoint_register = {.endpoints = NULL, .capacity = 0, .size = 0};
 
-CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route) {
+CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route)
+{
     if (!CAPI_IsValidHttpMethod(http_method) || route == NULL)
-    {
         return NULL;
-    }
 
     for (int i = 0; i < endpoint_register.size; i++) {
         if (endpoint_register.endpoints[i].http_method == http_method 
@@ -30,18 +30,29 @@ CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route) {
     return NULL;
 }
 
-static int CAPI_AddEndpoint(CAPI_Endpoint endpoint)
+static CAPI_ErrorCode CAPI_AddEndpoint(CAPI_Endpoint endpoint)
 {
     if (CAPI_GetApiCallFor(endpoint.http_method, endpoint.route) != NULL)
-        return -1;
+    {
+        CAPI_SetErrorCode(CAPI_ERR_INVALID_PARAMETER,
+                "The endpoint `%s %s` already exist.",
+                CAPI_HttpMethodToString(endpoint.http_method), endpoint.route);
+
+        return CAPI_ERR_INVALID_PARAMETER;
+    }
 
     if (endpoint_register.endpoints == NULL || endpoint_register.capacity == endpoint_register.size)
     {
-        CAPI_Endpoint *tmp_ptr = (CAPI_Endpoint *) malloc(
-                sizeof(CAPI_Endpoint) * (endpoint_register.capacity + 8));
+        CAPI_Endpoint *tmp_ptr = (CAPI_Endpoint *) malloc(sizeof(CAPI_Endpoint) * (endpoint_register.capacity + 8));
 
         if (tmp_ptr == NULL)
-            return -1;
+        {
+            CAPI_SetErrorCode(CAPI_ERR_MALLOC,
+                    "Unable to allocate memory to register the endpoint `%s %s`.",
+                    CAPI_HttpMethodToString(endpoint.http_method), endpoint.route);
+
+            return CAPI_ERR_MALLOC;
+        }
 
         for (int i = 0; i < endpoint_register.size; i++)
             tmp_ptr[i] = endpoint_register.endpoints[i];
@@ -55,7 +66,10 @@ static int CAPI_AddEndpoint(CAPI_Endpoint endpoint)
     char *tmp_ptr = (char *) malloc(strlen(endpoint.route) + 1);
     
     if (tmp_ptr == NULL)
-        return -1;
+    {
+        CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable allocate memory for the route `%s`.", endpoint.route);
+        return CAPI_ERR_MALLOC;
+    }
     
     strcpy(tmp_ptr, endpoint.route);
     
@@ -64,7 +78,7 @@ static int CAPI_AddEndpoint(CAPI_Endpoint endpoint)
     endpoint_register.endpoints[endpoint_register.size].api_call = endpoint.api_call; 
     endpoint_register.size += 1;
 
-    return 0;
+    return CAPI_SUCCESS;
 }
 
 void CAPI_FreeEndpointRegister()
@@ -79,18 +93,16 @@ void CAPI_FreeEndpointRegister()
     endpoint_register.size = 0;
 }
 
-int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call)
+CAPI_ErrorCode CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call)
 {
     if (!CAPI_IsValidHttpMethod(http_method) || route == NULL || api_call == NULL)
     {
-        return -1;
+        CAPI_SetErrorCode(CAPI_ERR_INVALID_PARAMETER, "Cannot register endpoint: invalid parameter.");
+        return CAPI_ERR_INVALID_PARAMETER;
     }
 
     CAPI_Endpoint endpoint = {http_method, route, api_call};
 
-    if (CAPI_AddEndpoint(endpoint) < 0)
-        return -1;
-
-    return 0;
+    return CAPI_AddEndpoint(endpoint); 
 }
 

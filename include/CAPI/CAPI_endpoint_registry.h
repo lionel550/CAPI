@@ -2,7 +2,9 @@
 #define CAPI_ENDPOINT_REGISTRY_H_
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "CAPI/CAPI_types.h"
+#include "CAPI/CAPI_error.h"
 
 int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call);
 
@@ -13,8 +15,9 @@ CAPI_ApiCall CAPI_GetApiCallFor(CAPI_HttpMethod http_method, char *route);
 
 #define CAPI_REGISTER_ENDPOINT(http_method, route, api_call) \
     void __attribute__((constructor(102))) CAPI_CONCAT(register_endpoint, __COUNTER__)() { \
-        if (CAPI_RegisterEndpoint(http_method, route, api_call) == -1) { \
-            exit(EXIT_FAILURE); \
+        if (CAPI_RegisterEndpoint(http_method, route, api_call) != CAPI_SUCCESS) { \
+            fprintf(stderr, CAPI_GetLastErrorMessage()); \
+            exit(CAPI_GetLastErrorCode()); \
         } \
     }
 
