@@ -22,30 +22,27 @@ static int CAPI_CreateSocket()
     int server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (server_sockfd == -1)
-    {
-        perror("socket");
-        return -1;
-    }
+        goto socket_return_error;
 
     int flags = fcntl(server_sockfd, F_GETFL, 0);
     
     if (flags == -1)
-    {
-        perror("fcntl(F_GETFL)");
-        close(server_sockfd);
-        return -1;
-    }
+        goto socket_clean_and_return_error;
 
-    if (fcntl(server_sockfd, F_SETFL, flags | O_NONBLOCK) == -1) {
-        perror("fcntl(F_SETFL)");
-        close(server_sockfd);
-        return -1;
-    }
+    if (fcntl(server_sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
+        goto socket_clean_and_return_error;
 
     return server_sockfd;
+
+socket_clean_and_return_error:
+    close(server_sockfd);
+
+socket_return_error:
+    CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable to create socket: %s", strerror(errno));
+    return -1;
 }
 
-static int CAPI_BindSocket(int server_sockfd, in_addr_t adress, int port)
+static CAPI_ErrorCode CAPI_BindSocket(int server_sockfd, in_addr_t adress, int port)
 {
     struct sockaddr_in server_addr = {0};
     server_addr.sin_family = AF_INET;
@@ -54,20 +51,18 @@ static int CAPI_BindSocket(int server_sockfd, in_addr_t adress, int port)
 
     if (bind(server_sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1)
     {
-        perror("bind");
-        return -1;
+        CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable to bind socket: %s", strerror(errno));
+        return CAPI_ERR_SERVER;
     }
     
-    return 0;
+    return CAPI_SUCCESS;
 }
 
-static int CAPI_AcceptLoop(int server_sockfd)
+// TODO: Execute valgrind with all option and resolve fd errors
+static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
 {
     if (listen(server_sockfd, REQUEST_QUEUE_SIZE) == -1)
-    {
-        perror("listen");
-        return -1;
-    }
+        goto accept_loop_return_error;
 
     struct pollfd pfd = {
         .fd = server_sockfd,
@@ -82,8 +77,7 @@ static int CAPI_AcceptLoop(int server_sockfd)
         if (ready == -1)
         {
             if (errno == EINTR) continue;
-            perror("poll");
-            return -1;
+            goto accept_loop_return_error;
         }
 
         if (pfd.revents & POLLIN) {
@@ -92,6 +86,7 @@ static int CAPI_AcceptLoop(int server_sockfd)
             if (request_sockfd == -1)
             {
                 perror("accept");
+                continue;
             }
             
             pid_t pid = fork();
@@ -117,11 +112,11 @@ static int CAPI_AcceptLoop(int server_sockfd)
                 {
                     perror("send");
                     close(request_sockfd);
-                    return -1;
+                    return CAPI_ERR_SERVER;
                 }
 
                 close(request_sockfd);
-                return 0;
+                return CAPI_SUCCESS;
             }
             else
             {
@@ -130,7 +125,11 @@ static int CAPI_AcceptLoop(int server_sockfd)
         }
     }
 
-    return 0;
+    return CAPI_SUCCESS;
+
+accept_loop_return_error:
+    CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable accept incomming connection: %s", strerror(errno));
+    return CAPI_ERR_SERVER;
 }
 
 void CAPI_RunServer()
@@ -138,17 +137,19 @@ void CAPI_RunServer()
     int server_sockfd = CAPI_CreateSocket();
     
     if (server_sockfd == -1)
-    {
-        exit(EXIT_FAILURE);
-    }
+        goto run_server_exit_error;
 
-    if (CAPI_BindSocket(server_sockfd, DEFAULT_BINDING_ADRESS, DEAULT_BINDING_PORT) == -1 
-            || CAPI_AcceptLoop(server_sockfd) == -1)
-    {
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
+    if (CAPI_BindSocket(server_sockfd, DEFAULT_BINDING_ADRESS, DEAULT_BINDING_PORT) != CAPI_SUCCESS 
+            || CAPI_AcceptLoop(server_sockfd) != CAPI_SUCCESS)
+        goto run_server_clean_and_exit_error;
 
     close(server_sockfd);
     exit(EXIT_SUCCESS);
+
+run_server_clean_and_exit_error:
+    close(server_sockfd);
+
+run_server_exit_error:
+    fprintf(stderr, CAPI_GetLastErrorMessage());
+    exit(CAPI_GetLastErrorCode());
 }
