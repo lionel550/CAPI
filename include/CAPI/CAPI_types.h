@@ -13,6 +13,7 @@ typedef enum {
 } CAPI_HttpMethod;
 
 bool CAPI_IsValidHttpMethod(CAPI_HttpMethod http_method);
+char *CAPI_HttpMethodToString(CAPI_HttpMethod http_method);
 
 typedef struct {
     CAPI_HttpMethod method;
