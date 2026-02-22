@@ -9,11 +9,13 @@ static volatile sig_atomic_t keep_running = 1;
 
 static void sigchld_handler(int s)
 {
+    (void) s;
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
 static void sigint_handler(int s)
 {
+    (void) s;
     keep_running = 0;
 }
 

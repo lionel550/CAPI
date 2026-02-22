@@ -2,6 +2,8 @@
 #include "CAPI/CAPI.h"
 
 void hello(CAPI_HttpRequest *request, CAPI_HttpResponse *response) {
+    (void) request;
+    (void) response;
     printf("Hello from hello\n");
 }
 CAPI_REGISTER_ENDPOINT(GET, "/hello", hello)
