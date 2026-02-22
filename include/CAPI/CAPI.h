@@ -4,5 +4,6 @@
 #include "CAPI_server.h"
 #include "CAPI_endpoint_registry.h"
 #include "CAPI_types.h"
+#include "CAPI_error.h"
 
 #endif // CAPI_H_
