@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include "CAPI_internal.h"
+#include "CAPI/CAPI_logger.h"
 
 // TODO: Implement dynamic array for request queue
 #define DEFAULT_BINDING_ADRESS  INADDR_LOOPBACK
@@ -70,6 +71,8 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
         .revents = 0
     };
 
+    CAPI_LOG_INFO("running on http://127.0.0.1:8080/ (Press CTRL+C to quit)");
+
     while (CAPI_ShouldKeepRunning())
     {
         int ready = poll(&pfd, 1, -1);
@@ -85,7 +88,7 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
             
             if (request_sockfd == -1)
             {
-                perror("accept");
+                CAPI_LOG_ERROR(strerror(errno));
                 continue;
             }
             
@@ -93,11 +96,13 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
             
             if (pid == -1)
             {
-                perror("fork");
+                CAPI_LOG_ERROR(strerror(errno));
                 close(request_sockfd);
             }
             else if (pid == 0)
             {
+                CAPI_LOG_INFO("request received !");
+
                 close(server_sockfd);
                 
                 const char *http_response = 
@@ -150,6 +155,6 @@ run_server_clean_and_exit_error:
     close(server_sockfd);
 
 run_server_exit_error:
-    fprintf(stderr, CAPI_GetLastErrorMessage());
+    CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
     exit(CAPI_GetLastErrorCode());
 }

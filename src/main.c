@@ -17,7 +17,7 @@ int main()
         return -1;
     }
 
-    api_call(NULL, NULL);
+    // api_call(NULL, NULL);
     CAPI_RunServer();
     return 0;
 }
