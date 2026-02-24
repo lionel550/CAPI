@@ -5,5 +5,6 @@
 #include "CAPI_endpoint_registry.h"
 #include "CAPI_types.h"
 #include "CAPI_error.h"
+#include "CAPI_logger.h"
 
 #endif // CAPI_H_

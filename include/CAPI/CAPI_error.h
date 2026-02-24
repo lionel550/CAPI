@@ -7,7 +7,8 @@ typedef enum {
     CAPI_ERR_FORK,
     CAPI_ERR_SERVER,
     CAPI_ERR_INVALID_PARAMETER,
-    CAPI_ERROR,
+    CAPI_ERR_INIT,
+    CAPI_ERR_SINGAL_REG,
 } CAPI_ErrorCode;
 
 typedef struct {

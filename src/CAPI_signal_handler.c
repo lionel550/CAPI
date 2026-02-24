@@ -24,10 +24,10 @@ static struct sigaction sa_sigchild = {.sa_handler = sigchld_handler, .sa_flags 
 
 CAPI_ErrorCode CAPI_RegisterSignalActions()
 {
-    if ((sigaction(SIGCHLD, &sa_sigchild, NULL) | sigaction(SIGINT, &sa_sigint, NULL)) == -1)
+    if (sigaction(SIGCHLD, &sa_sigchild, NULL) == -1 || sigaction(SIGINT, &sa_sigint, NULL) == -1)
     {
-        CAPI_SetErrorCode(CAPI_ERROR, "Unable to register signal actions: %s", strerror(errno));
-        return CAPI_ERROR;
+        CAPI_SetErrorCode(CAPI_ERR_SINGAL_REG, "Unable to register signal actions: %s", strerror(errno));
+        return CAPI_ERR_SINGAL_REG;
     }
 
     return CAPI_SUCCESS;
