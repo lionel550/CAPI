@@ -10,7 +10,7 @@ void CAPI_ReapedChildProcesses()
 
 CAPI_ErrorCode CAPI_RegisterExitCalls()
 {
-    if ((atexit(CAPI_FreeEndpointRegister) | atexit(CAPI_ReapedChildProcesses)) != 0)
+    if (atexit(CAPI_FreeEndpointRegister) != 0 || atexit(CAPI_ReapedChildProcesses) != 0)
     {
         CAPI_SetErrorCode(CAPI_ERR_INIT, "Unable to register exit calls.");
         return CAPI_ERR_INIT;
