@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include "CAPI_internal.h"
-#include "CAPI/CAPI_logger.h"
 
 // TODO: Implement dynamic array for request queue
 #define DEFAULT_BINDING_ADRESS  INADDR_LOOPBACK

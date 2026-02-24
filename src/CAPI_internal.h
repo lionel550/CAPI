@@ -2,6 +2,8 @@
 #define CAPI_INTERNAL_H_
 
 #include "CAPI/CAPI_error.h"
+#include "CAPI/CAPI_logger.h"
+#include "CAPI/CAPI_types.h"
 
 CAPI_ErrorCode CAPI_RegisterSignalActions();
 

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include "CAPI_internal.h"
-#include "CAPI/CAPI_logger.h"
 
 void CAPI_ReapedChildProcesses()
 {

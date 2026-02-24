@@ -3,9 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "CAPI/CAPI_types.h"
-#include "CAPI/CAPI_error.h"
-#include "CAPI/CAPI_logger.h"
+#include "CAPI_internal.h"
 
 int CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, CAPI_ApiCall api_call);
 

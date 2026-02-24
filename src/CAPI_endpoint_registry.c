@@ -1,7 +1,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "CAPI/CAPI_types.h"
 #include "CAPI_internal.h"
 
 // TODO: Replace this structure by a tree to speed up endpoint research
