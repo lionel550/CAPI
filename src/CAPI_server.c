@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -100,10 +101,25 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
             }
             else if (pid == 0)
             {
-                CAPI_LOG_INFO("request received !");
-
                 close(server_sockfd);
+                // Server (Listener),Accepts the TCP connection and reads the raw bytes into a buffer.
+                // Parser,"Converts the raw string into a struct HttpRequest (Method, Path, Headers, Body).
+                // Router,Compares the path in the struct against a table of registered patterns.
+                // Handler (Endpoint),"Takes the Request struct, performs logic, and fills a Response struct.
+                // Serializer,Converts the Response struct back into an HTTP-compliant string.
                 
+                char *buffer = NULL;
+                size_t bytes_read = 0;
+
+                if (CAPI_ReadClientRequest(request_sockfd, &buffer, &bytes_read) != CAPI_SUCCESS)
+                {
+                    CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
+                }
+                
+                CAPI_LOG_INFO(buffer);
+                free(buffer);
+                buffer = NULL;
+
                 const char *http_response = 
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: text/plain\r\n"
@@ -111,7 +127,7 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
                 "Connection: close\r\n"
                 "\r\n"
                 "Unexpected item in bagging area. Be courage.";
-
+                
                 if (send(request_sockfd, http_response, strlen(http_response), 0) == -1)
                 {
                     perror("send");

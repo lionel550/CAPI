@@ -9,6 +9,9 @@ typedef enum {
     CAPI_ERR_INVALID_PARAMETER,
     CAPI_ERR_INIT,
     CAPI_ERR_SINGAL_REG,
+    CAPI_ERR_CLIENT,
+    CAPI_ERR_SYS_CALL,
+    CAPI_UNKNOWN_ERR,
 } CAPI_ErrorCode;
 
 typedef struct {

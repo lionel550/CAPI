@@ -13,4 +13,6 @@ void CAPI_FreeEndpointRegister();
 
 void CAPI_SetErrorCode(CAPI_ErrorCode error_code, char *fmt, ...);
 
+CAPI_ErrorCode CAPI_ReadClientRequest(int client_sockfd, char **buffer, size_t *total_bytes_read);
+
 #endif // CAPI_INTERNAL_H_
