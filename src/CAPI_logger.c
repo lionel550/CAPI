@@ -55,7 +55,7 @@ void CAPI_WriteLog(FILE *stream, CAPI_LogLevel log_level, char *fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     fprintf(stream, "%s: ", CAPI_LogLevelToString(log_level));
-    fprintf(stream, fmt, ap);
+    vfprintf(stream, fmt, ap);
     fprintf(stream, "\n");
     va_end(ap);
 
