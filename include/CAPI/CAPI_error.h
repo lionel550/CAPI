@@ -11,6 +11,7 @@ typedef enum {
     CAPI_ERR_SINGAL_REG,
     CAPI_ERR_CLIENT,
     CAPI_ERR_SYS_CALL,
+    CAPI_ERR_TIMEOUT,
     CAPI_UNKNOWN_ERR,
 } CAPI_ErrorCode;
 

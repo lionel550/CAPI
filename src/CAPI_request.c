@@ -1,3 +1,4 @@
+#include <bits/types/struct_timeval.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <string.h>
@@ -8,12 +9,9 @@
 #include "CAPI_internal.h"
 
 #define BUFFER_SIZE 1024
+#define MAXIMUM_REQUEST_SIZE 4 * BUFFER_SIZE
+#define MICROSECONDS_PER_SECOND 1000000
 
-// TODO: Set a time out
-// TODO: Resolve the 'adress already' use problem
-// TODO: Define it own header file ?
-// TODO: Clean Up error code and rename CAPI_SetErrorCode to CAPI_SetError
-// Create a default config structure in server for: timeout, buffsize, max request size, ....
 CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_bytes_read)
 {
     char read_buffer[BUFFER_SIZE] = {0};
@@ -34,17 +32,17 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
 
     if (getsockopt(client_sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, &optlen) == -1)
     {
-        CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get the receive timeout: %s", strerror(errno));
         free(collect_buffer);
+        CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get the receive timeout: %s", strerror(errno));
         return CAPI_ERR_SYS_CALL;
     }
 
     struct timeval start, now;
     if (gettimeofday(&start, NULL) == -1)
     {
-        CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "Unable to get time of day: %s", strerror(errno));
         free(collect_buffer);
-        return CAPI_UNKNOWN_ERR;
+        CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
+        return CAPI_ERR_SYS_CALL;
     }
     
     for (;;)
@@ -53,18 +51,18 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
         {
             if (gettimeofday(&now, NULL) == -1)
             {
-                CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "Unable to get time of day: %s", strerror(errno));
                 free(collect_buffer);
-                return CAPI_UNKNOWN_ERR;
+                CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
+                return CAPI_ERR_SYS_CALL;
             }
 
-            long elapsed = (now.tv_sec - start.tv_sec) * 1000000 + (now.tv_usec - start.tv_usec);
+            long elapsed = (now.tv_sec - start.tv_sec) * MICROSECONDS_PER_SECOND + (now.tv_usec - start.tv_usec);
 
-            if (elapsed >= (timeout.tv_sec * 1000000 + timeout.tv_usec))
+            if (elapsed >= (timeout.tv_sec * MICROSECONDS_PER_SECOND + timeout.tv_usec))
             {
-                CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "Timeout: the client take too long to send request data.");
                 free(collect_buffer);
-                return CAPI_UNKNOWN_ERR;
+                CAPI_SetErrorCode(CAPI_ERR_TIMEOUT, "Timeout: the client took too long to send request data.");
+                return CAPI_ERR_TIMEOUT;
             }
         }
 
@@ -72,15 +70,15 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
         
         if (bytes_read == -1)
         {
-            CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Error while receiving request data");
             free(collect_buffer);
+            CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Error while receiving request data");
             return CAPI_ERR_SYS_CALL;
         }
         
         if (bytes_read == 0)
         {
-            CAPI_SetErrorCode(CAPI_ERR_CLIENT, "Client disconnected.");
             free(collect_buffer);
+            CAPI_SetErrorCode(CAPI_ERR_CLIENT, "Client disconnected.");
             return CAPI_ERR_CLIENT;
         }
    
@@ -88,23 +86,23 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
 
         if (collect_buffer_capacity - strlen(collect_buffer) < (size_t) (bytes_read + 1))
         {
-            if (collect_buffer_capacity == 4 * BUFFER_SIZE)
+            if (collect_buffer_capacity == MAXIMUM_REQUEST_SIZE)
             {
-                CAPI_SetErrorCode(CAPI_ERR_CLIENT, "The client exceeded the maximum request size.");
                 free(collect_buffer);
+                CAPI_SetErrorCode(CAPI_ERR_CLIENT, "The client exceeded the maximum request size.");
                 return CAPI_ERR_CLIENT;
             }
 
-            char *tmp = realloc(collect_buffer, collect_buffer_capacity + BUFFER_SIZE);
+            char *tmp_realloc = realloc(collect_buffer, collect_buffer_capacity + BUFFER_SIZE);
             
-            if (tmp == NULL)
+            if (tmp_realloc == NULL)
             {
-                CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
                 free(collect_buffer);
+                CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
                 return CAPI_ERR_MALLOC;
             }
             
-            collect_buffer = tmp;
+            collect_buffer = tmp_realloc;
             collect_buffer_capacity += BUFFER_SIZE;
         }
 
@@ -119,7 +117,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
         }
     }
 
-    CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "Unexpected error happen where receiving client data.");
     free(collect_buffer);
+    CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "An unexpected error happened while receiving request data.");
     return CAPI_UNKNOWN_ERR;
 }
