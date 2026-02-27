@@ -5,108 +5,98 @@
 
 // TODO: Handle edge case
 // TODO: Check if valid http method
-// TODO: Refactor
 // TODO: Complete the parser implementation
+// TODO: update the buffer size
 
-static CAPI_ErrorCode CAPI_ParseRequestLine(char *line, CAPI_HttpRequest *request)
+#define GET_AND_CHECK_LINE(line, cursor, error_msg) do { \
+    if ((line = CAPI_ChopWithDelimiter(&cursor, '\n')) == NULL) \
+    { \
+        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        return CAPI_ERR_REQUEST_PARSING; \
+    } \
+} while(0)
+
+#define GET_AND_CHECK_WORD(word, cursor, error_msg) do { \
+    if ((word = CAPI_ChopWithDelimiter(&cursor, ' ')) == NULL \
+            && (word = CAPI_ChopWithDelimiter(&cursor, '\0')) == NULL) \
+    { \
+        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        return CAPI_ERR_REQUEST_PARSING; \
+    } \
+} while(0)
+
+#define GET_AND_CHECK_KEY(word, cursor, error_msg) do { \
+    if ((line = CAPI_ChopWithDelimiter(&cursor, ':')) == NULL) \
+    { \
+        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        return CAPI_ERR_REQUEST_PARSING; \
+    } \
+} while(0)
+
+char *CAPI_ChopWithDelimiter(char **buffer, char delimiter)
 {
-    char *line_cursor = line;
-
-    char *word_end = strchr(line_cursor, ' ');
-    if (word_end == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to extract the http method");
-        return CAPI_ERR_REQUEST_PARSING; 
-    }
-    *word_end = '\0';
-    request->header.http_method = line_cursor;
-    line_cursor = word_end + 1;
+    char *chop_start = *buffer;
+    char *chop_end = strchr(chop_start, delimiter);
     
-    word_end = strchr(line_cursor, ' ');
-    if (word_end == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to extract the path");
-        return CAPI_ERR_REQUEST_PARSING; 
-    }
-    *word_end = '\0';
-    request->header.path = line_cursor;
-    line_cursor = word_end + 1;
+    if (chop_end == NULL)
+        return NULL;
 
-    word_end = strchr(line_cursor, '\0');
-    if (word_end == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to extract the http version");
-        return CAPI_ERR_REQUEST_PARSING; 
-    }
-    request->header.version = line_cursor;
-
-    return CAPI_SUCCESS;
+    *chop_end = '\0';
+    *buffer = chop_end + 1;
+    
+    return chop_start;
 }
 
-static CAPI_ErrorCode CAPI_ParseHostLine(char *line, CAPI_HttpRequest *request)
+static CAPI_ErrorCode CAPI_ParseRequestLine(char *line, CAPI_HttpRequestHeader *header)
 {
-    char *line_cursor = line;
+    char *cursor = line;
+    char *word = NULL;
 
-    char *word_end = strchr(line_cursor, ':');
-    if (word_end == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to find the host");
-        return CAPI_ERR_REQUEST_PARSING; 
-    }
-    line_cursor = word_end + 2;
+    GET_AND_CHECK_WORD(word, cursor, "Request parser: unable to extract the http method");
+    header->http_method = word;
+    
+    GET_AND_CHECK_WORD(word, cursor, "Request parser: unable to extract the path");
+    header->path = word;
 
-    word_end = strchr(line_cursor, '\0');
-
-    if (word_end == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to find the host value");
-        return CAPI_ERR_REQUEST_PARSING; 
-    }
-
-    request->header.host = line_cursor;
+    GET_AND_CHECK_WORD(word, cursor, "Request parser: unable to extract the http version");
+    header->http_version = word;
 
     return CAPI_SUCCESS;
 }
 
-CAPI_ErrorCode CAPI_ParseHttpRequest(char *buffer, size_t buf_len, CAPI_HttpRequest *request)
+static CAPI_ErrorCode CAPI_ParseHostLine(char *line, CAPI_HttpRequestHeader *header)
+{
+    char *cursor = line;
+    char *word = NULL;
+
+    GET_AND_CHECK_KEY(word, cursor, "Request parser: unable to find the host");
+
+    // TODO: Check the key (header key are case-insensitive)
+
+    cursor += 1;
+    GET_AND_CHECK_WORD(word, cursor, "Request parser: unable to find the host value");
+   
+    header->host = word;
+
+    return CAPI_SUCCESS;
+}
+
+CAPI_ErrorCode CAPI_ParseHttpRequest(char *buffer, size_t buf_len, CAPI_HttpRequest *http_request)
 {
     (void) buf_len;
 
     char *cursor = buffer;
+    char *line = NULL;
 
-    char *ptr = strchr(cursor, '\n');
-    
-    if (ptr == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to extract the request line");
-        return CAPI_ERR_REQUEST_PARSING;
-    }
-    
-    *ptr = '\0';
-    
-    if (CAPI_ParseRequestLine(cursor, request) != CAPI_SUCCESS)
-    {
+    GET_AND_CHECK_LINE(line, cursor, "Request parser: unable to extract the request line");
+
+    if (CAPI_ParseRequestLine(line, &http_request->header) != CAPI_SUCCESS)
         return CAPI_GetLastErrorCode();
-    }
     
-    cursor = ptr + 1;
-
-    ptr = strchr(cursor, '\n');
+    GET_AND_CHECK_LINE(line, cursor, "Request parser: unable to extract the host line");
     
-    if (ptr == NULL)
-    {
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, "Request parser: unable to extract the host line");
-        return CAPI_ERR_REQUEST_PARSING;
-    }
-    
-    *ptr = '\0';
-    
-    if (CAPI_ParseHostLine(cursor, request) != CAPI_SUCCESS)
-    {
+    if (CAPI_ParseHostLine(line, &http_request->header) != CAPI_SUCCESS)
         return CAPI_GetLastErrorCode();
-    }
-
-    cursor = ptr + 1;
 
     return CAPI_SUCCESS;
 }
