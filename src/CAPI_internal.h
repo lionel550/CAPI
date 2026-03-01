@@ -11,8 +11,10 @@ int CAPI_ShouldKeepRunning();
 
 void CAPI_FreeEndpointRegister();
 
-void CAPI_SetErrorCode(CAPI_ErrorCode error_code, char *fmt, ...);
+void CAPI_SetError(CAPI_ErrorCode error_code, char *fmt, ...);
 
 CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_bytes_read);
+
+CAPI_ErrorCode CAPI_ParseHttpRequest(char *buffer, size_t buf_len, CAPI_HttpRequest *request);
 
 #endif // CAPI_INTERNAL_H_
