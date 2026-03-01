@@ -13,6 +13,7 @@ typedef enum {
     CAPI_ERR_SYS_CALL,
     CAPI_ERR_TIMEOUT,
     CAPI_UNKNOWN_ERR,
+    CAPI_ERR_REQUEST_PARSING,
 } CAPI_ErrorCode;
 
 typedef struct {
