@@ -16,7 +16,14 @@ bool CAPI_IsValidHttpMethod(CAPI_HttpMethod http_method);
 char *CAPI_HttpMethodToString(CAPI_HttpMethod http_method);
 
 typedef struct {
-    CAPI_HttpMethod method;
+    char *http_method;
+    char *host;
+    char *path;
+    char *http_version;
+} CAPI_HttpRequestHeader;
+
+typedef struct {
+    CAPI_HttpRequestHeader header;
 } CAPI_HttpRequest;
 
 typedef struct {
