@@ -14,7 +14,7 @@ CAPI_ErrorCode CAPI_GetLastErrorCode()
     return last_error.error_code;
 }
 
-void CAPI_SetErrorCode(CAPI_ErrorCode error_code, char *fmt, ...)
+void CAPI_SetError(CAPI_ErrorCode error_code, char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

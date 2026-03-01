@@ -33,7 +33,7 @@ static CAPI_ErrorCode CAPI_AddEndpoint(CAPI_Endpoint endpoint)
 {
     if (CAPI_GetApiCallFor(endpoint.http_method, endpoint.route) != NULL)
     {
-        CAPI_SetErrorCode(CAPI_ERR_INVALID_PARAMETER,
+        CAPI_SetError(CAPI_ERR_INVALID_PARAMETER,
                 "The endpoint `%s %s` already exist.",
                 CAPI_HttpMethodToString(endpoint.http_method), endpoint.route);
 
@@ -46,7 +46,7 @@ static CAPI_ErrorCode CAPI_AddEndpoint(CAPI_Endpoint endpoint)
 
         if (tmp_ptr == NULL)
         {
-            CAPI_SetErrorCode(CAPI_ERR_MALLOC,
+            CAPI_SetError(CAPI_ERR_MALLOC,
                     "Unable to allocate memory to register the endpoint `%s %s`.",
                     CAPI_HttpMethodToString(endpoint.http_method), endpoint.route);
 
@@ -66,7 +66,7 @@ static CAPI_ErrorCode CAPI_AddEndpoint(CAPI_Endpoint endpoint)
     
     if (tmp_ptr == NULL)
     {
-        CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable allocate memory for the route `%s`.", endpoint.route);
+        CAPI_SetError(CAPI_ERR_MALLOC, "Unable allocate memory for the route `%s`.", endpoint.route);
         return CAPI_ERR_MALLOC;
     }
     
@@ -96,7 +96,7 @@ CAPI_ErrorCode CAPI_RegisterEndpoint(CAPI_HttpMethod http_method, char *route, C
 {
     if (!CAPI_IsValidHttpMethod(http_method) || route == NULL || api_call == NULL)
     {
-        CAPI_SetErrorCode(CAPI_ERR_INVALID_PARAMETER, "Cannot register endpoint: invalid parameter.");
+        CAPI_SetError(CAPI_ERR_INVALID_PARAMETER, "Cannot register endpoint: invalid parameter.");
         return CAPI_ERR_INVALID_PARAMETER;
     }
 

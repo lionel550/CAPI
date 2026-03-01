@@ -11,7 +11,7 @@
 #define GET_AND_CHECK_LINE(line, cursor, error_msg) do { \
     if ((line = CAPI_ChopWithDelimiter(&cursor, '\n')) == NULL) \
     { \
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        CAPI_SetError(CAPI_ERR_REQUEST_PARSING, error_msg); \
         return CAPI_ERR_REQUEST_PARSING; \
     } \
 } while(0)
@@ -20,7 +20,7 @@
     if ((word = CAPI_ChopWithDelimiter(&cursor, ' ')) == NULL \
             && (word = CAPI_ChopWithDelimiter(&cursor, '\0')) == NULL) \
     { \
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        CAPI_SetError(CAPI_ERR_REQUEST_PARSING, error_msg); \
         return CAPI_ERR_REQUEST_PARSING; \
     } \
 } while(0)
@@ -28,7 +28,7 @@
 #define GET_AND_CHECK_KEY(word, cursor, error_msg) do { \
     if ((line = CAPI_ChopWithDelimiter(&cursor, ':')) == NULL) \
     { \
-        CAPI_SetErrorCode(CAPI_ERR_REQUEST_PARSING, error_msg); \
+        CAPI_SetError(CAPI_ERR_REQUEST_PARSING, error_msg); \
         return CAPI_ERR_REQUEST_PARSING; \
     } \
 } while(0)

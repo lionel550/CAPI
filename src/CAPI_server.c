@@ -1,3 +1,4 @@
+#include <bits/types/struct_timeval.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ socket_clean_and_return_error:
     close(server_sockfd);
 
 socket_return_error:
-    CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable to create socket: %s", strerror(errno));
+    CAPI_SetError(CAPI_ERR_SERVER, "Unable to create socket: %s", strerror(errno));
     return -1;
 }
 
@@ -52,7 +53,7 @@ static CAPI_ErrorCode CAPI_BindSocket(int server_sockfd, in_addr_t adress, int p
 
     if (bind(server_sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1)
     {
-        CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable to bind socket: %s", strerror(errno));
+        CAPI_SetError(CAPI_ERR_SERVER, "Unable to bind socket: %s", strerror(errno));
         return CAPI_ERR_SERVER;
     }
     
@@ -101,24 +102,35 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
             }
             else if (pid == 0)
             {
+                CAPI_LOG_INFO("Request received");
                 close(server_sockfd);
-                // Server (Listener),Accepts the TCP connection and reads the raw bytes into a buffer.
+                // DONE: Server (Listener),Accepts the TCP connection and reads the raw bytes into a buffer.
                 // Parser,"Converts the raw string into a struct HttpRequest (Method, Path, Headers, Body).
                 // Router,Compares the path in the struct against a table of registered patterns.
                 // Handler (Endpoint),"Takes the Request struct, performs logic, and fills a Response struct.
                 // Serializer,Converts the Response struct back into an HTTP-compliant string.
                 
-                char *buffer = NULL;
-                size_t bytes_read = 0;
+                // char *buffer = NULL;
+                // size_t bytes_read = 0;
+                //
+                // if (CAPI_ReadRequest(request_sockfd, &buffer, &bytes_read) != CAPI_SUCCESS)
+                // {
+                //     CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
+                // }
+                //
+                // CAPI_HttpRequest request = {0};
 
-                if (CAPI_ReadClientRequest(request_sockfd, &buffer, &bytes_read) != CAPI_SUCCESS)
-                {
-                    CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
-                }
-                
-                CAPI_LOG_INFO(buffer);
-                free(buffer);
-                buffer = NULL;
+                // CAPI_LOG_INFO("Error code parser: %d", CAPI_ParseHttpRequest(buffer, bytes_read, &request));
+                // CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
+                // CAPI_LOG_INFO("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+                // CAPI_LOG_INFO("http method: %s", request.header.http_method);
+                // CAPI_LOG_INFO("http path: %s", request.header.path);
+                // CAPI_LOG_INFO("http version: %s", request.header.http_version);
+                // CAPI_LOG_INFO("http host: %s", request.header.host);
+                // CAPI_LOG_INFO("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+                // CAPI_LOG_INFO(buffer);
+                // free(buffer);
+                // buffer = NULL;
 
                 const char *http_response = 
                 "HTTP/1.1 200 OK\r\n"
@@ -148,7 +160,7 @@ static CAPI_ErrorCode CAPI_AcceptLoop(int server_sockfd)
     return CAPI_SUCCESS;
 
 accept_loop_return_error:
-    CAPI_SetErrorCode(CAPI_ERR_SERVER, "Unable accept incomming connection: %s", strerror(errno));
+    CAPI_SetError(CAPI_ERR_SERVER, "Unable accept incomming connection: %s", strerror(errno));
     return CAPI_ERR_SERVER;
 }
 

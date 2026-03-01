@@ -26,7 +26,7 @@ CAPI_ErrorCode CAPI_RegisterSignalActions()
 {
     if (sigaction(SIGCHLD, &sa_sigchild, NULL) == -1 || sigaction(SIGINT, &sa_sigint, NULL) == -1)
     {
-        CAPI_SetErrorCode(CAPI_ERR_SINGAL_REG, "Unable to register signal actions: %s", strerror(errno));
+        CAPI_SetError(CAPI_ERR_SINGAL_REG, "Unable to register signal actions: %s", strerror(errno));
         return CAPI_ERR_SINGAL_REG;
     }
 

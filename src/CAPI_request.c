@@ -21,7 +21,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
 
     if (collect_buffer == NULL)
     {
-        CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
+        CAPI_SetError(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
         return CAPI_ERR_MALLOC;
     }
 
@@ -33,7 +33,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
     if (getsockopt(client_sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, &optlen) == -1)
     {
         free(collect_buffer);
-        CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get the receive timeout: %s", strerror(errno));
+        CAPI_SetError(CAPI_ERR_SYS_CALL, "Unable to get the receive timeout: %s", strerror(errno));
         return CAPI_ERR_SYS_CALL;
     }
 
@@ -41,7 +41,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
     if (gettimeofday(&start, NULL) == -1)
     {
         free(collect_buffer);
-        CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
+        CAPI_SetError(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
         return CAPI_ERR_SYS_CALL;
     }
     
@@ -52,7 +52,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
             if (gettimeofday(&now, NULL) == -1)
             {
                 free(collect_buffer);
-                CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
+                CAPI_SetError(CAPI_ERR_SYS_CALL, "Unable to get time of day: %s", strerror(errno));
                 return CAPI_ERR_SYS_CALL;
             }
 
@@ -61,7 +61,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
             if (elapsed >= (timeout.tv_sec * MICROSECONDS_PER_SECOND + timeout.tv_usec))
             {
                 free(collect_buffer);
-                CAPI_SetErrorCode(CAPI_ERR_TIMEOUT, "Timeout: the client took too long to send request data.");
+                CAPI_SetError(CAPI_ERR_TIMEOUT, "Timeout: the client took too long to send request data.");
                 return CAPI_ERR_TIMEOUT;
             }
         }
@@ -71,14 +71,14 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
         if (bytes_read == -1)
         {
             free(collect_buffer);
-            CAPI_SetErrorCode(CAPI_ERR_SYS_CALL, "Error while receiving request data");
+            CAPI_SetError(CAPI_ERR_SYS_CALL, "Error while receiving request data");
             return CAPI_ERR_SYS_CALL;
         }
         
         if (bytes_read == 0)
         {
             free(collect_buffer);
-            CAPI_SetErrorCode(CAPI_ERR_CLIENT, "Client disconnected.");
+            CAPI_SetError(CAPI_ERR_CLIENT, "Client disconnected.");
             return CAPI_ERR_CLIENT;
         }
    
@@ -89,7 +89,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
             if (collect_buffer_capacity == MAXIMUM_REQUEST_SIZE)
             {
                 free(collect_buffer);
-                CAPI_SetErrorCode(CAPI_ERR_CLIENT, "The client exceeded the maximum request size.");
+                CAPI_SetError(CAPI_ERR_CLIENT, "The client exceeded the maximum request size.");
                 return CAPI_ERR_CLIENT;
             }
 
@@ -98,7 +98,7 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
             if (tmp_realloc == NULL)
             {
                 free(collect_buffer);
-                CAPI_SetErrorCode(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
+                CAPI_SetError(CAPI_ERR_MALLOC, "Unable to allocate request buffer.");
                 return CAPI_ERR_MALLOC;
             }
             
@@ -118,6 +118,6 @@ CAPI_ErrorCode CAPI_ReadRequest(int client_sockfd, char **buffer, size_t *total_
     }
 
     free(collect_buffer);
-    CAPI_SetErrorCode(CAPI_UNKNOWN_ERR, "An unexpected error happened while receiving request data.");
+    CAPI_SetError(CAPI_UNKNOWN_ERR, "An unexpected error happened while receiving request data.");
     return CAPI_UNKNOWN_ERR;
 }
