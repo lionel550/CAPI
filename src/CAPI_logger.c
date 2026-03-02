@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
+#include <unistd.h>
 #include "CAPI/CAPI_logger.h"
 
 static struct CAPI_LoggerState {
@@ -52,9 +54,15 @@ void CAPI_WriteLog(FILE *stream, CAPI_LogLevel log_level, char *fmt, ...)
     if (!LoggerState.log_level || !CAPI_IsValidLogLevel(log_level) || log_level > LoggerState.log_level)
         return;
 
+    char buffer[128];
+    time_t now = time(NULL);
+    struct tm *local_time = localtime(&now);
+    
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", local_time);
+
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stream, "%s: ", CAPI_LogLevelToString(log_level));
+    fprintf(stream, "[%s] [%d] [%s] ", buffer, getpid(), CAPI_LogLevelToString(log_level));
     vfprintf(stream, fmt, ap);
     fprintf(stream, "\n");
     va_end(ap);
