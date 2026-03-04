@@ -20,7 +20,7 @@ CAPI_ErrorCode CAPI_RegisterExitCalls()
 
 void __attribute__((constructor(101))) CAPI_Init()
 {
-    if ((CAPI_RegisterSignalActions() | CAPI_RegisterExitCalls()) != CAPI_SUCCESS)
+    if (CAPI_RegisterSignalActions() != CAPI_SUCCESS || CAPI_RegisterExitCalls() != CAPI_SUCCESS)
     {
         CAPI_LOG_ERROR(CAPI_GetLastErrorMessage());
         exit(CAPI_GetLastErrorCode());
